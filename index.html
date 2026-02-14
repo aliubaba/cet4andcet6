@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordMaster - 四六级单词挑战</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Poppins', 'Noto Sans SC', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 20px 40px -5px rgba(102, 126, 234, 0.3);
+        }
+        
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .progress-ring {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        .option-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.4);
+        }
+        
+        .option-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .correct-answer {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            color: white !important;
+            transform: scale(1.02);
+        }
+        
+        .wrong-answer {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+            color: white !important;
+            animation: shake 0.5s;
+        }
+        
+        .streak-flame {
+            animation: flame 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes flame {
+            0% { transform: scale(1) rotate(-2deg); }
+            100% { transform: scale(1.1) rotate(2deg); }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            animation: confetti-fall 3s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .word-reveal {
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+        }
+        
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4 overflow-hidden relative">
+
+    <!-- 背景装饰 -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-10 left-10 w-32 h-32 bg-white opacity-10 rounded-full float-animation"></div>
+        <div class="absolute bottom-20 right-20 w-48 h-48 bg-white opacity-5 rounded-full float-animation" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-white opacity-10 rounded-full float-animation" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- 主容器 -->
+    <div id="app" class="w-full max-w-2xl relative z-10">
+        
+        <!-- 开始界面 -->
+        <div id="start-screen" class="glass-effect rounded-3xl p-8 md:p-12 card-shadow text-center bounce-in">
+            <div class="mb-6 relative inline-block">
+                <div class="text-6xl mb-2">📚</div>
+                <div class="absolute -top-2 -right-2 text-3xl streak-flame">🔥</div>
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-black text-gray-800 mb-4 word-reveal">
+                WordMaster
+            </h1>
+            <p class="text-gray-600 text-lg mb-8">四六级单词挑战 · 让背单词变得有趣</p>
+            
+            <div class="space-y-4 mb-8">
+                <div class="flex justify-center gap-4">
+                    <button onclick="selectLevel('cet4')" id="btn-cet4" class="level-btn px-6 py-3 rounded-xl bg-indigo-100 text-indigo-700 font-bold border-2 border-indigo-200 hover:border-indigo-500 transition-all transform hover:scale-105">
+                        四级词汇
+                    </button>
+                    <button onclick="selectLevel('cet6')" id="btn-cet6" class="level-btn px-6 py-3 rounded-xl bg-white text-gray-600 font-bold border-2 border-gray-200 hover:border-purple-500 hover:text-purple-600 transition-all transform hover:scale-105">
+                        六级词汇
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mb-8 text-sm text-gray-600">
+                <div class="bg-indigo-50 p-3 rounded-xl">
+                    <div class="text-2xl mb-1">🎯</div>
+                    <div>多种题型</div>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-xl">
+                    <div class="text-2xl mb-1">⚡</div>
+                    <div>即时反馈</div>
+                </div>
+                <div class="bg-pink-50 p-3 rounded-xl">
+                    <div class="text-2xl mb-1">🏆</div>
+                    <div>成就系统</div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-xl shadow-lg hover:shadow-2xl transform hover:scale-[1.02] transition-all active:scale-95">
+                开始挑战 🚀
+            </button>
+        </div>
+
+        <!-- 游戏界面 -->
+        <div id="game-screen" class="hidden glass-effect rounded-3xl p-6 md:p-8 card-shadow">
+            <!-- 顶部状态栏 -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <button onclick="quitGame()" class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <span id="level-badge" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-bold">CET-4</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1 text-orange-500 font-bold">
+                        <span class="text-xl streak-flame">🔥</span>
+                        <span id="streak-count">0</span>
+                    </div>
+                    <div class="relative w-12 h-12">
+                        <svg class="w-12 h-12 transform -rotate-90">
+                            <circle cx="24" cy="24" r="20" stroke="#e5e7eb" stroke-width="4" fill="none"></circle>
+                            <circle id="progress-ring" cx="24" cy="24" r="20" stroke="#667eea" stroke-width="4" fill="none" stroke-dasharray="125.6" stroke-dashoffset="125.6" class="progress-ring"></circle>
+                        </svg>
+                        <span id="question-number" class="absolute inset-0 flex items-center justify-center text-sm font-bold text-gray-700">1/10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分数显示 -->
+            <div class="text-center mb-6">
+                <div class="text-3xl font-black text-gray-800">
+                    <span id="score">0</span>
+                    <span class="text-lg text-gray-400 font-normal">分</span>
+                </div>
+            </div>
+
+            <!-- 题目区域 -->
+            <div id="question-container" class="mb-6">
+                <!-- 动态内容 -->
+            </div>
+
+            <!-- 选项区域 -->
+            <div id="options-container" class="space-y-3">
+                <!-- 动态选项 -->
+            </div>
+
+            <!-- 反馈区域 -->
+            <div id="feedback" class="hidden mt-6 p-4 rounded-2xl text-center font-bold text-lg slide-up"></div>
+
+            <!-- 下一题按钮 -->
+            <button id="next-btn" onclick="nextQuestion()" class="hidden w-full mt-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all">
+                下一题 →
+            </button>
+        </div>
+
+        <!-- 结果界面 -->
+        <div id="result-screen" class="hidden glass-effect rounded-3xl p-8 card-shadow text-center">
+            <div class="mb-6">
+                <div id="result-emoji" class="text-6xl mb-4 bounce-in">🎉</div>
+                <h2 class="text-3xl font-black text-gray-800 mb-2">挑战完成!</h2>
+                <p id="result-message" class="text-gray-600">太棒了！继续保持</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-indigo-50 p-4 rounded-2xl">
+                    <div class="text-3xl font-black text-indigo-600" id="final-score">0</div>
+                    <div class="text-sm text-gray-600">最终得分</div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-2xl">
+                    <div class="text-3xl font-black text-purple-600" id="accuracy">0%</div>
+                    <div class="text-sm text-gray-600">正确率</div>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-2xl">
+                    <div class="text-3xl font-black text-orange-600" id="max-streak">0</div>
+                    <div class="text-sm text-gray-600">最高连击</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-2xl">
+                    <div class="text-3xl font-black text-green-600" id="correct-count">0/10</div>
+                    <div class="text-sm text-gray-600">答对题数</div>
+                </div>
+            </div>
+
+            <div id="achievement-badge" class="hidden mb-6 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl border-2 border-yellow-300 bounce-in">
+                <div class="text-2xl mb-1">🏆</div>
+                <div class="font-bold text-yellow-800" id="achievement-text">单词大师</div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="restartGame()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all">
+                    再玩一次 🔄
+                </button>
+                <button onclick="backToHome()" class="w-full py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all">
+                    返回首页
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 词汇数据库
+        const vocabulary = {
+            cet4: [
+                { word: "abandon", meaning: "放弃，抛弃", options: ["放弃，抛弃", "接受，同意", "提高，改善", "减少，降低"], type: "choice" },
+                { word: "ability", meaning: "能力，才能", options: ["能力，才能", "残疾，无能", "稳定，安定", "变化，变动"], type: "choice" },
+                { word: "absence", meaning: "缺席，不在", options: ["出席，在场", "缺席，不在", "存在，出现", "参加，参与"], type: "choice" },
+                { word: "absolute", meaning: "绝对的，完全的", options: ["相对的，比较的", "绝对的，完全的", "部分的，不完全的", "可能的，也许的"], type: "choice" },
+                { word: "absorb", meaning: "吸收，吸引", options: ["释放，放出", "吸收，吸引", "排斥，拒绝", "分散，散开"], type: "choice" },
+                { word: "abstract", meaning: "抽象的，摘要", options: ["具体的，实在的", "抽象的，摘要", "简单的，容易的", "复杂的，困难的"], type: "choice" },
+                { word: "abundant", meaning: "丰富的，充裕的", options: ["缺乏的，不足的", "丰富的，充裕的", "普通的，一般的", "稀有的，珍贵的"], type: "choice" },
+                { word: "academic", meaning: "学术的，学院的", options: ["学术的，学院的", "商业的，贸易的", "工业的，产业的", "农业的，农耕的"], type: "choice" },
+                { word: "accelerate", meaning: "加速，促进", options: ["减速，放慢", "加速，促进", "停止，静止", "维持，保持"], type: "choice" },
+                { word: "access", meaning: "进入，使用权", options: ["出口，离开", "进入，使用权", "禁止，阻止", "限制，局限"], type: "choice" },
+                { word: "accommodate", meaning: "容纳，适应", options: ["拒绝，排斥", "容纳，适应", "忽视，忽略", "反对，反抗"], type: "choice" },
+                { word: "accomplish", meaning: "完成，实现", options: ["开始，着手", "完成，实现", "放弃，中止", "推迟，延期"], type: "choice" },
+                { word: "accumulate", meaning: "积累，积聚", options: ["分散，散开", "积累，积聚", "消耗，花费", "丢失，遗失"], type: "choice" },
+                { word: "accurate", meaning: "精确的，准确的", options: ["错误的，不准确的", "精确的，准确的", "大概的，粗略的", "模糊的，不清楚的"], type: "choice" },
+                { word: "achieve", meaning: "达到，实现", options: ["失败，失利", "达到，实现", "放弃，抛弃", "破坏，毁坏"], type: "choice" }
+            ],
+            cet6: [
+                { word: "ambiguous", meaning: "模棱两可的，含糊的", options: ["清晰的，明确的", "模棱两可的，含糊的", "简单的，简易的", "复杂的，难懂的"], type: "choice" },
+                { word: "analogy", meaning: "类比，类推", options: ["对比，对照", "类比，类推", "差异，不同", "相等，相同"], type: "choice" },
+                { word: "anticipate", meaning: "预期，预料", options: ["回忆，回想", "预期，预料", "跟随，追随", "忽视，忽略"], type: "choice" },
+                { word: "apparent", meaning: "明显的，显然的", options: ["隐藏的，隐蔽的", "明显的，显然的", "虚假的，伪造的", "真实的，真正的"], type: "choice" },
+                { word: "arbitrary", meaning: "任意的，武断的", options: ["合理的，理性的", "任意的，武断的", "固定的，不变的", "灵活的，可变的"], type: "choice" },
+                { word: "articulate", meaning: "善于表达的，发音清晰的", options: ["口齿不清的", "善于表达的，发音清晰的", "沉默的，寡言的", "害羞的，胆怯的"], type: "choice" },
+                { word: "assert", meaning: "断言，坚持", options: ["否认，否定", "断言，坚持", "怀疑，质疑", "放弃，让步"], type: "choice" },
+                { word: "assess", meaning: "评估，评价", options: ["忽视，忽略", "评估，评价", "接受，同意", "拒绝，反对"], type: "choice" },
+                { word: "assign", meaning: "分配，指派", options: ["收回，取回", "分配，指派", "拒绝，否认", "聚集，集合"], type: "choice" },
+                { word: "assume", meaning: "假定，假设", options: ["证明，证实", "假定，假设", "否认，否定", "结束，终止"], type: "choice" },
+                { word: "available", meaning: "可用的，有空的", options: ["忙碌的，没空的", "可用的，有空的", "无效的，作废的", "稀缺的，不足的"], type: "choice" },
+                { word: "aware", meaning: "意识到的，知道的", options: ["无知的，不知道的", "意识到的，知道的", " asleep睡着的", "忙碌的，无暇的"], type: "choice" },
+                { word: "bias", meaning: "偏见，偏心", options: ["公平，公正", "偏见，偏心", "真理，事实", "证据，证明"], type: "choice" },
+                { word: "brief", meaning: "简短的，简要的", options: ["冗长的，漫长的", "简短的，简要的", "详细的，详尽的", "复杂的，难懂的"], type: "choice" },
+                { word: "capable", meaning: "有能力的，能干的", options: ["无能的，不能的", "有能力的，能干的", "懒惰的，懈怠的", "笨拙的，不灵活的"], type: "choice" }
+            ]
+        };
+
+        // 游戏状态
+        let currentLevel = 'cet4';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let maxStreak = 0;
+        let correctAnswers = 0;
+        let answered = false;
+
+        // 选择难度
+        function selectLevel(level) {
+            currentLevel = level;
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-100', 'text-indigo-700', 'border-indigo-500');
+                btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+            });
+            
+            const selectedBtn = document.getElementById(`btn-${level}`);
+            selectedBtn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            selectedBtn.classList.add('bg-indigo-100', 'text-indigo-700', 'border-indigo-500');
+        }
+
+        // 开始游戏
+        function startGame() {
+            // 随机选择10道题
+            const allQuestions = [...vocabulary[currentLevel]];
+            currentQuestions = shuffleArray(allQuestions).slice(0, 10);
+            currentQuestionIndex = 0;
+            score = 0;
+            streak = 0;
+            maxStreak = 0;
+            correctAnswers = 0;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('level-badge').textContent = currentLevel === 'cet4' ? 'CET-4' : 'CET-6';
+            
+            showQuestion();
+        }
+
+        // 显示题目
+        function showQuestion() {
+            answered = false;
+            const question = currentQuestions[currentQuestionIndex];
+            
+            // 更新进度环
+            const progress = ((currentQuestionIndex + 1) / 10) * 125.6;
+            document.getElementById('progress-ring').style.strokeDashoffset = 125.6 - progress;
+            document.getElementById('question-number').textContent = `${currentQuestionIndex + 1}/10`;
+            
+            // 清空反馈
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            
+            // 生成题目HTML
+            const questionContainer = document.getElementById('question-container');
+            const optionsContainer = document.getElementById('options-container');
+            
+            // 随机决定题型：看词选义 或 看义选词
+            const questionType = Math.random() > 0.5 ? 'word-to-meaning' : 'meaning-to-word';
+            
+            if (questionType === 'word-to-meaning') {
+                questionContainer.innerHTML = `
+                    <div class="text-center mb-8">
+                        <div class="text-5xl font-black text-gray-800 mb-4 tracking-wide">${question.word}</div>
+                        <div class="text-gray-500 text-sm">选择正确的中文释义</div>
+                    </div>
+                `;
+                
+                // 生成选项（包含正确答案和3个错误答案）
+                const options = shuffleArray([...question.options]);
+                optionsContainer.innerHTML = options.map((option, index) => `
+                    <button onclick="checkAnswer('${option}', '${question.meaning}', this)" 
+                            class="option-btn w-full p-4 bg-white border-2 border-gray-200 rounded-xl text-left font-medium text-gray-700 hover:border-indigo-400 hover:bg-indigo-50 transition-all">
+                        <span class="inline-block w-8 h-8 bg-gray-100 rounded-full text-center leading-8 mr-3 text-sm font-bold text-gray-500">${String.fromCharCode(65 + index)}</span>
+                        ${option}
+                    </button>
+                `).join('');
+            } else {
+                questionContainer.innerHTML = `
+                    <div class="text-center mb-8">
+                        <div class="text-2xl font-bold text-gray-800 mb-4 leading-relaxed">${question.meaning}</div>
+                        <div class="text-gray-500 text-sm">选择正确的英文单词</div>
+                    </div>
+                `;
+                
+                // 生成单词选项（需要获取其他单词作为干扰项）
+                const otherWords = vocabulary[currentLevel]
+                    .filter(w => w.word !== question.word)
+                    .slice(0, 3);
+                const wordOptions = shuffleArray([question, ...otherWords]);
+                
+                optionsContainer.innerHTML = wordOptions.map((item, index) => `
+                    <button onclick="checkAnswer('${item.word}', '${question.word}', this)" 
+                            class="option-btn w-full p-4 bg-white border-2 border-gray-200 rounded-xl text-left font-medium text-gray-700 hover:border-indigo-400 hover:bg-indigo-50 transition-all">
+                        <span class="inline-block w-8 h-8 bg-gray-100 rounded-full text-center leading-8 mr-3 text-sm font-bold text-gray-500">${String.fromCharCode(65 + index)}</span>
+                        ${item.word}
+                    </button>
+                `).join('');
+            }
+            
+            // 添加进入动画
+            questionContainer.classList.remove('slide-up');
+            void questionContainer.offsetWidth; // 触发重排
+            questionContainer.classList.add('slide-up');
+        }
+
+        // 检查答案
+        function checkAnswer(selected, correct, btnElement) {
+            if (answered) return;
+            answered = true;
+            
+            const isCorrect = selected === correct;
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            // 禁用所有按钮
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('cursor-not-allowed', 'opacity-70');
+            });
+            
+            // 高亮正确答案
+            buttons.forEach(btn => {
+                if (btn.textContent.includes(correct) || btn.onclick.toString().includes(correct)) {
+                    btn.classList.add('correct-answer');
+                    btn.classList.remove('bg-white', 'border-gray-200');
+                }
+            });
+            
+            const feedback = document.getElementById('feedback');
+            
+            if (isCorrect) {
+                // 计算得分（连击加成）
+                const baseScore = 10;
+                const streakBonus = Math.min(streak * 2, 10);
+                const points = baseScore + streakBonus;
+                score += points;
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+                correctAnswers++;
+                
+                // 显示正确反馈
+                btnElement.classList.add('correct-answer');
+                feedback.innerHTML = `
+                    <div class="text-green-600 flex items-center justify-center gap-2">
+                        <span class="text-2xl">✓</span>
+                        <div>
+                            <div>回答正确！+${points}分</div>
+                            ${streak > 1 ? `<div class="text-sm text-orange-500">🔥 连击 x${streak}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                feedback.className = 'mt-6 p-4 rounded-2xl bg-green-50 border-2 border-green-200 text-center font-bold text-lg slide-up';
+                
+                // 播放成功音效（视觉反馈）
+                createConfetti();
+            } else {
+                // 错误处理
+                streak = 0;
+                btnElement.classList.add('wrong-answer');
+                feedback.innerHTML = `
+                    <div class="text-red-600 flex items-center justify-center gap-2">
+                        <span class="text-2xl">✗</span>
+                        <div>
+                            <div>回答错误</div>
+                            <div class="text-sm text-gray-600">正确答案是：${correct}</div>
+                        </div>
+                    </div>
+                `;
+                feedback.className = 'mt-6 p-4 rounded-2xl bg-red-50 border-2 border-red-200 text-center font-bold text-lg slide-up';
+            }
+            
+            feedback.classList.remove('hidden');
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak-count').textContent = streak;
+            document.getElementById('next-btn').classList.remove('hidden');
+            
+            // 最后一题显示"查看结果"
+            if (currentQuestionIndex === 9) {
+                document.getElementById('next-btn').textContent = '查看结果 🏆';
+            }
+        }
+
+        // 下一题
+        function nextQuestion() {
+            if (currentQuestionIndex < 9) {
+                currentQuestionIndex++;
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // 显示结果
+        function showResults() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            const accuracy = Math.round((correctAnswers / 10) * 100);
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('max-streak').textContent = maxStreak;
+            document.getElementById('correct-count').textContent = `${correctAnswers}/10`;
+            
+            // 根据表现给出评价和成就
+            let emoji = '😊';
+            let message = '继续加油！';
+            let achievement = null;
+            
+            if (accuracy === 100) {
+                emoji = '🏆';
+                message = '完美！你是单词大师！';
+                achievement = '满分王者';
+            } else if (accuracy >= 80) {
+                emoji = '🌟';
+                message = '太棒了！表现优异！';
+                achievement = '词汇达人';
+            } else if (accuracy >= 60) {
+                emoji = '👍';
+                message = '不错哦！继续巩固！';
+                achievement = '学习能手';
+            } else {
+                emoji = '💪';
+                message = '再接再厉，多多练习！';
+            }
+            
+            if (maxStreak >= 5) {
+                achievement = achievement ? achievement + ' · 连击高手' : '连击高手';
+            }
+            
+            document.getElementById('result-emoji').textContent = emoji;
+            document.getElementById('result-message').textContent = message;
+            
+            if (achievement) {
+                document.getElementById('achievement-badge').classList.remove('hidden');
+                document.getElementById('achievement-text').textContent = achievement;
+            } else {
+                document.getElementById('achievement-badge').classList.add('hidden');
+            }
+            
+            // 大成功时放烟花
+            if (accuracy >= 80) {
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createConfetti(), i * 300);
+                }
+            }
+        }
+
+        // 重新开始
+        function restartGame() {
+            document.getElementById('result-screen').classList.add('hidden');
+            startGame();
+        }
+
+        // 返回首页
+        function backToHome() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('next-btn').textContent = '下一题 →';
+        }
+
+        // 退出游戏
+        function quitGame() {
+            if (confirm('确定要退出当前游戏吗？进度将不会保存。')) {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('start-screen').classList.remove('hidden');
+                document.getElementById('next-btn').textContent = '下一题 →';
+            }
+        }
+
+        // 辅助函数：随机打乱数组
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 创建彩纸效果
+        function createConfetti() {
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                confetti.style.opacity = Math.random();
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 4000);
+            }
+        }
+
+        // 初始化
+        selectLevel('cet4');
+    </script>
+</body>
+</html>
